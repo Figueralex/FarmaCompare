@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Ruta interna donde ota_update guarda el APK descargado: dataDir/files/ota_update/ -->
+    <files-path name="ota_update_files" path="ota_update/" />
+    <!-- Cobertura general para compatibilidad -->
+    <files-path name="files" path="." />
+    <cache-path name="cache" path="." />
+    <external-path name="external_files" path="." />
+    <external-cache-path name="external_cache" path="." />
+</paths>

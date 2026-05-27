@@ -1,0 +1,70 @@
+name: Flutter iOS Build (Unsigned)
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+  workflow_dispatch: # Permite ejecutar la compilación manualmente desde la interfaz de GitHub
+
+jobs:
+  build:
+    name: Build iOS (No Codesign)
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          # Selecciona la versión de Flutter. Al no especificar, usa la última versión estable.
+          # Puedes especificar una versión fija si lo prefieres, ej: flutter-version: '3.19.0'
+
+      - name: Verify Flutter version
+        run: flutter --version
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: ios/Pods
+          key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+
+      - name: Install Pods
+        run: |
+          cd ios
+          pod install --repo-update
+          cd ..
+
+      - name: Build iOS App Bundle (Unsigned)
+        run: flutter build ios --release --no-codesign
+
+      - name: Compress Runner.app
+        run: |
+          cd build/ios/iphoneos
+          zip -r ../../../Runner.app.zip Runner.app
+          cd ../../..
+
+      - name: Upload iOS Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-runner-app
+          path: Runner.app.zip
+          retention-days: 7 # Guarda el archivo por 7 días
