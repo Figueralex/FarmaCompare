@@ -25,7 +25,7 @@ class ProductRepository {
       print("🔍 Buscando en la base de datos para: $terms con farmacias habilitadas: $activePharmacies");
       final dbResults = await _queryDatabase(terms, activePharmacies);
 
-      // Determinar qué farmacias tienen registros RECIENTES (menos de 24 horas y mismo día calendario)
+      // Determinar qué farmacias tienen registros RECIENTES (menos de 72 horas)
       final now = DateTime.now();
       
       bool hasRecentProduct(String pharmacy) {
@@ -33,23 +33,12 @@ class ProductRepository {
         if (pharmacyProducts.isEmpty) return false;
         
         // Si hay algún producto que tiene createdAt:
-        // 1. Verificamos que tenga menos de 24 horas.
-        // 2. Verificamos que sea del mismo día calendario local (una vez empiece un nuevo día se debe actualizar).
+        // Verificamos que tenga menos de 72 horas para mejorar el rendimiento del usuario.
         return pharmacyProducts.any((p) {
           if (p.createdAt == null) return false;
           
-          final createdLocal = p.createdAt!.toLocal();
-          final nowLocal = now.toLocal();
-          
-          // Si han pasado 24 horas o más, ya no es reciente
-          if (now.difference(p.createdAt!).inHours >= 24) return false;
-          
-          // Si es un día calendario diferente, ya no es reciente (cambio de día)
-          if (createdLocal.year != nowLocal.year ||
-              createdLocal.month != nowLocal.month ||
-              createdLocal.day != nowLocal.day) {
-            return false;
-          }
+          // Si han pasado 72 horas o más, ya no es reciente
+          if (now.difference(p.createdAt!).inHours >= 72) return false;
           
           return true;
         });
